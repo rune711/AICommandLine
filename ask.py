@@ -14,7 +14,6 @@ DEFAULT_MODEL = "gemma4:cloud"
 
 #get the args from the command line
 
-def get_args():
     
 def get_model_name():
     model = os.environ.get("OLLAMA_MODEL")
