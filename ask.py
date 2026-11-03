@@ -41,7 +41,7 @@ def build_request(question, model, args):
     """Returns the formatted request for the Ollama API."""
     #get the command arguments.
     
-    systemPrompt = "You are an assistant to an Arch Linux user.  The user may ask questions on any topic but often about Linux commands.  Return as brief a response/answer as possible."
+    systemPrompt = "You are an assistant to an Arch Linux user.  The user may ask questions on any topic but often about Linux commands.  Return as brief a response/answer as possible. Your response is output to the command line so so not output any complex formatting markdown. "
     context = loadContext()
     if len(context) > 0:
         systemPrompt += f"  With regard to {context}: "
@@ -86,6 +86,9 @@ def ask(question, argParser):
     answer_parts = []
 
     try:
+        theContext = loadContext()
+        if theContext != "":
+            print(f"[context: {theContext}]")
         with urllib.request.urlopen(request) as response:
             for raw_line in response:
                 line = raw_line.decode("utf-8").strip()
@@ -140,12 +143,16 @@ def main():
     parser.add_argument("-s","--set_context", type=str, help="Set the context for the question")
     parser.add_argument("question", nargs="*", type=str, help="The question to ask")
     parser.add_argument("-d", "--debug",action="store_true", help="Flag to enable debugging output." )
+    parser.add_argument("--clear-context", action="store_true", help="Clear the context for the question")
     
     args = parser.parse_args()
 
     if args.set_context is not None:
         #write the context to a file in the user's home directory
         writeContext(args.set_context)
+    elif args.clear_context:
+        #Just write an empty string to the context file to clear it. An empty string is treated as no context set.
+        writeContext("")
 
     if len(args.question) == 0:
         print("Usage: ask.py [-h] [-c] [-s SET_CONTEXT] question", file=sys.stderr)
