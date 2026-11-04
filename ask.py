@@ -86,9 +86,6 @@ def ask(question, argParser):
     answer_parts = []
 
     try:
-        theContext = loadContext()
-        if theContext != "":
-            print(f"[context: {theContext}]")
         with urllib.request.urlopen(request) as response:
             for raw_line in response:
                 line = raw_line.decode("utf-8").strip()
@@ -141,23 +138,31 @@ def main():
     parser = argparse.ArgumentParser(description="Ask a question to the Ollama API.")
     parser.add_argument("-c", "--copy", action="store_true", help="Copy the answer to the clipboard")
     parser.add_argument("-s","--set_context", type=str, help="Set the context for the question")
-    parser.add_argument("question", nargs="*", type=str, help="The question to ask")
+    #parser.add_argument("question", nargs="*", type=str, help="The question to ask")
     parser.add_argument("-d", "--debug",action="store_true", help="Flag to enable debugging output." )
     parser.add_argument("--clear-context", action="store_true", help="Clear the context for the question")
     
     args = parser.parse_args()
-
-    if args.set_context is not None:
-        #write the context to a file in the user's home directory
-        writeContext(args.set_context)
-    elif args.clear_context:
-        #Just write an empty string to the context file to clear it. An empty string is treated as no context set.
+   
+    if (args.clear_context):
         writeContext("")
+        print("Context cleared!")
 
-    if len(args.question) == 0:
-        print("Usage: ask.py [-h] [-c] [-s SET_CONTEXT] question", file=sys.stderr)
+    if (args.set_context is not None):
+        writeContext(args.set_context)
+        print("Context Updated.")
+
+    #if we've gotten here by only the program being run without other flags, then we need to prompt the user for a question.  If the user has provided a question on the command line, then we will use that question.
+    try:
+        print("[context:" + loadContext() + "]" )
+        question = input("??=>").strip()
+    except (EOFError, KeyboardInterrupt):
+        print(file=sys.stderr)
         return 1
-    question = " ".join(args.question)
+    if question == "":
+        print("no question provided? Exiting.")
+        return(1)
+        question = " ".join(args.question)
     if len(question) > 0:
         return ask(question,args)
 
